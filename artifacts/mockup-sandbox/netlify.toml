@@ -1,4 +1,29 @@
-# This site is deployed via the root netlify.toml.
-# See /netlify.toml at repo root for full build configuration.
+# ──────────────────────────────────────────────────────────────────────────────
+#  Netlify reads THIS file (because the site's base dir is artifacts/mockup-sandbox).
+#  We override base back to "/" so the OMPAY Watch app is built instead.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[build]
+  base    = "/"
+  command = "pnpm install && pnpm --filter @workspace/ompay run build"
+  publish = "artifacts/ompay/dist/public"
+
 [build.environment]
+  NODE_VERSION = "20"
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
+  # Firebase public config — baked into JS bundle by Vite at build time
+  VITE_FIREBASE_API_KEY             = "AIzaSyCvDejJHuwi-w9mlDkOADCYhex0r01ljgU"
+  VITE_FIREBASE_AUTH_DOMAIN         = "oman-tmoel.firebaseapp.com"
+  VITE_FIREBASE_DATABASE_URL        = "https://oman-tmoel-default-rtdb.firebaseio.com"
+  VITE_FIREBASE_PROJECT_ID          = "oman-tmoel"
+  VITE_FIREBASE_STORAGE_BUCKET      = "oman-tmoel.firebasestorage.app"
+  VITE_FIREBASE_MESSAGING_SENDER_ID = "258014180602"
+  VITE_FIREBASE_APP_ID              = "1:258014180602:web:22615c967c8d8e60914543"
+  VITE_FIREBASE_MEASUREMENT_ID      = "G-BFJ7K1BM6S"
+
+# SPA: every URL returns index.html so React handles routing client-side
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
