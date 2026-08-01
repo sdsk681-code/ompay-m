@@ -19,7 +19,7 @@ export default function RegisterData({ onBack, onNext }: Props) {
 
   const isValid =
     name.trim().length > 0 &&
-    phone.replace(/\D/g, '').length === 8 &&
+    phone.replace(/\D/g, '').length >= 7 &&
     id.length === 9;
 
   return (
@@ -116,12 +116,11 @@ export default function RegisterData({ onBack, onNext }: Props) {
                 type="tel"
                 value={phone}
                 onChange={(e) => {
-                  const raw = e.target.value.replace(/\D/g, '');
-                  const enforced = '9' + raw.replace(/^9/, '').slice(0, 7);
-                  setPhone(enforced);
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                  setPhone(digits);
                 }}
-                placeholder="9xxxxxxx"
-                maxLength={8}
+                placeholder="أدخل رقم الهاتف"
+                maxLength={12}
                 className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right"
                 dir="ltr"
               />
