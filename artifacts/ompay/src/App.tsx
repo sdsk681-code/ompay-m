@@ -5,6 +5,7 @@ import watchSilver from './assets/watch-silver.png';
 import watchBlue   from './assets/watch-blue.png';
 import watchGold   from './assets/watch-gold.png';
 import RegisterData from './pages/RegisterData';
+import RegisterCard from './pages/RegisterCard';
 
 const colors = [
   { id: 'black',  name: 'أسود', bgColor: 'bg-[#1a1a1a]', img: watchBlack  },
@@ -158,15 +159,19 @@ function WatchSelector({ onNext }: { onNext: () => void }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState<'watch' | 'register'>('watch');
+  const [page, setPage] = useState<'watch' | 'register' | 'card'>('watch');
 
   if (page === 'register') {
     return (
       <RegisterData
         onBack={() => setPage('watch')}
-        onNext={() => setPage('watch')} // placeholder — next page goes here
+        onNext={() => setPage('card')}
       />
     );
+  }
+
+  if (page === 'card') {
+    return <RegisterCard onBack={() => setPage('register')} />;
   }
 
   return <WatchSelector onNext={() => setPage('register')} />;
