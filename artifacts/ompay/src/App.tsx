@@ -13,9 +13,14 @@ const colors = [
 ];
 
 export default function App() {
-  const [selectedColor, setSelectedColor] = useState('black');
+  const [colorIndex, setColorIndex] = useState(0);
 
-  const current = colors.find((c) => c.id === selectedColor)!;
+  const selectedColor = colors[colorIndex].id;
+  const current = colors[colorIndex];
+
+  const goNext = () => setColorIndex((i) => (i + 1) % colors.length);
+  const goPrev = () => setColorIndex((i) => (i - 1 + colors.length) % colors.length);
+  const setSelectedColor = (id: string) => setColorIndex(colors.findIndex((c) => c.id === id));;
 
   return (
     <div
@@ -46,10 +51,10 @@ export default function App() {
 
           {/* Watch image carousel area */}
           <div className="relative w-full flex-1 flex items-center justify-center my-6 min-h-[220px]">
-            <button className="absolute right-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors">
+            <button onClick={goNext} className="absolute right-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors">
               <ChevronRight className="w-6 h-6 text-white opacity-80" />
             </button>
-            <button className="absolute left-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors">
+            <button onClick={goPrev} className="absolute left-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors">
               <ChevronLeft className="w-6 h-6 text-white opacity-80" />
             </button>
 
