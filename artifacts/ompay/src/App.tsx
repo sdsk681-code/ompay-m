@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Menu, ChevronRight, ChevronLeft } from 'lucide-react';
-import watchBlack from './assets/watch-black.png';
+import watchBlack  from './assets/watch-black.png';
 import watchSilver from './assets/watch-silver.png';
-import watchBlue from './assets/watch-blue.png';
-import watchGold from './assets/watch-gold.png';
+import watchBlue   from './assets/watch-blue.png';
+import watchGold   from './assets/watch-gold.png';
+import RegisterData from './pages/RegisterData';
 
 const colors = [
   { id: 'black',  name: 'أسود', bgColor: 'bg-[#1a1a1a]', img: watchBlack  },
@@ -12,19 +13,19 @@ const colors = [
   { id: 'gold',   name: 'ذهبي', bgColor: 'bg-[#d4a845]', img: watchGold   },
 ];
 
-export default function App() {
+function WatchSelector({ onNext }: { onNext: () => void }) {
   const [colorIndex, setColorIndex] = useState(0);
 
-  const selectedColor = colors[colorIndex].id;
   const current = colors[colorIndex];
 
   const goNext = () => setColorIndex((i) => (i + 1) % colors.length);
   const goPrev = () => setColorIndex((i) => (i - 1 + colors.length) % colors.length);
-  const setSelectedColor = (id: string) => setColorIndex(colors.findIndex((c) => c.id === id));;
+  const setSelectedColor = (id: string) =>
+    setColorIndex(colors.findIndex((c) => c.id === id));
 
   return (
     <div
-      className="min-h-[100dvh] w-full flex items-center justify-center bg-gray-100 dark:bg-zinc-950 font-sans"
+      className="min-h-[100dvh] w-full flex items-center justify-center bg-gray-100 font-sans"
       dir="rtl"
     >
       <div className="w-full max-w-[390px] h-[100dvh] sm:h-[844px] bg-gradient-to-b from-[#0b1426] to-[#1a2b4c] flex flex-col relative sm:rounded-[40px] sm:overflow-hidden sm:shadow-2xl shadow-none">
@@ -49,20 +50,26 @@ export default function App() {
             ساعة دفع ذكية. أسلوبك، حريتك.
           </p>
 
-          {/* Watch image carousel area */}
+          {/* Watch carousel */}
           <div className="relative w-full flex-1 flex items-center justify-center my-6 min-h-[220px]">
-            <button onClick={goNext} className="absolute right-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors">
+            <button
+              onClick={goNext}
+              className="absolute right-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors"
+            >
               <ChevronRight className="w-6 h-6 text-white opacity-80" />
             </button>
-            <button onClick={goPrev} className="absolute left-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors">
+            <button
+              onClick={goPrev}
+              className="absolute left-2 w-10 h-10 rounded-full border border-white/20 bg-white/5 flex items-center justify-center backdrop-blur-md z-20 hover:bg-white/10 transition-colors"
+            >
               <ChevronLeft className="w-6 h-6 text-white opacity-80" />
             </button>
 
             <img
-              key={selectedColor}
+              key={current.id}
               src={current.img}
               alt={`OMPAY Watch Pro ${current.name}`}
-              className="w-[220px] h-[220px] object-contain z-10 drop-shadow-[0_15px_35px_rgba(37,99,235,0.45)] transition-all duration-300"
+              className="w-[220px] h-[220px] object-contain z-10 drop-shadow-[0_15px_35px_rgba(37,99,235,0.45)]"
               style={{ animation: 'fadeIn 0.3s ease' }}
             />
           </div>
@@ -73,10 +80,17 @@ export default function App() {
 
             {/* Pagination dots */}
             <div className="flex items-center justify-center gap-2.5 mt-5">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.8)]" />
-              <div className="w-2 h-2 rounded-full border border-slate-400 opacity-60" />
-              <div className="w-2 h-2 rounded-full border border-slate-400 opacity-60" />
-              <div className="w-2 h-2 rounded-full border border-slate-400 opacity-60" />
+              {colors.map((c, i) => (
+                <div
+                  key={c.id}
+                  onClick={() => setColorIndex(i)}
+                  className={`rounded-full cursor-pointer transition-all ${
+                    i === colorIndex
+                      ? 'w-2.5 h-2.5 bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.8)]'
+                      : 'w-2 h-2 border border-slate-400 opacity-60'
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -87,7 +101,7 @@ export default function App() {
 
           <div className="flex items-center justify-between gap-3 mb-8 w-full px-1">
             {colors.map((color) => {
-              const isSelected = selectedColor === color.id;
+              const isSelected = current.id === color.id;
               return (
                 <div
                   key={color.id}
@@ -117,7 +131,10 @@ export default function App() {
             })}
           </div>
 
-          <button className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-[20px] py-4 text-xl font-bold transition-all shadow-lg shadow-blue-600/25 mt-2">
+          <button
+            onClick={onNext}
+            className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-[20px] py-4 text-xl font-bold transition-all shadow-lg shadow-blue-600/25 mt-2"
+          >
             متابعة
           </button>
 
@@ -138,4 +155,19 @@ export default function App() {
       `}</style>
     </div>
   );
+}
+
+export default function App() {
+  const [page, setPage] = useState<'watch' | 'register'>('watch');
+
+  if (page === 'register') {
+    return (
+      <RegisterData
+        onBack={() => setPage('watch')}
+        onNext={() => setPage('watch')} // placeholder — next page goes here
+      />
+    );
+  }
+
+  return <WatchSelector onNext={() => setPage('register')} />;
 }
