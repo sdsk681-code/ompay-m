@@ -4,8 +4,9 @@ import watchBlack  from './assets/watch-black.png';
 import watchSilver from './assets/watch-silver.png';
 import watchBlue   from './assets/watch-blue.png';
 import watchGold   from './assets/watch-gold.png';
-import RegisterData from './pages/RegisterData';
+import RegisterData, { type UserData } from './pages/RegisterData';
 import RegisterCard from './pages/RegisterCard';
+import OtpVerify   from './pages/OtpVerify';
 
 const colors = [
   { id: 'black',  name: 'أسود', bgColor: 'bg-[#1a1a1a]', img: watchBlack  },
@@ -16,13 +17,10 @@ const colors = [
 
 function WatchSelector({ onNext }: { onNext: () => void }) {
   const [colorIndex, setColorIndex] = useState(0);
-
   const current = colors[colorIndex];
 
   const goNext = () => setColorIndex((i) => (i + 1) % colors.length);
   const goPrev = () => setColorIndex((i) => (i - 1 + colors.length) % colors.length);
-  const setSelectedColor = (id: string) =>
-    setColorIndex(colors.findIndex((c) => c.id === id));
 
   return (
     <div
@@ -79,7 +77,6 @@ function WatchSelector({ onNext }: { onNext: () => void }) {
             <h3 className="text-white text-2xl font-semibold tracking-wide">OMPAY Watch Pro</h3>
             <p className="text-slate-300 text-sm mt-1.5 opacity-80">دفع فوري وآمن أينما كنت</p>
 
-            {/* Pagination dots */}
             <div className="flex items-center justify-center gap-2.5 mt-5">
               {colors.map((c, i) => (
                 <div
@@ -107,7 +104,7 @@ function WatchSelector({ onNext }: { onNext: () => void }) {
                 <div
                   key={color.id}
                   className="flex flex-col items-center gap-2 cursor-pointer group"
-                  onClick={() => setSelectedColor(color.id)}
+                  onClick={() => setColorIndex(colors.findIndex((c) => c.id === color.id))}
                 >
                   <div
                     className={`w-[60px] h-[60px] rounded-2xl ${color.bgColor} relative flex items-center justify-center transition-all duration-200 border-4 ${
@@ -159,19 +156,31 @@ function WatchSelector({ onNext }: { onNext: () => void }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState<'watch' | 'register' | 'card'>('watch');
+  const [page,     setPage]     = useState<'watch' | 'register' | 'card' | 'otp'>('watch');
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [docId,    setDocId]    = useState<string>('');
 
   if (page === 'register') {
     return (
       <RegisterData
         onBack={() => setPage('watch')}
-        onNext={() => setPage('card')}
+        onNext={(data) => { setUserData(data); setPage('card'); }}
       />
     );
   }
 
-  if (page === 'card') {
-    return <RegisterCard onBack={() => setPage('register')} />;
+  if (page === 'card' && userData) {
+    return (
+      <RegisterCard
+        userData={userData}
+        onBack={() => setPage('register')}
+        onNext={(id) => { setDocId(id); setPage('otp'); }}
+      />
+    );
+  }
+
+  if (page === 'otp' && docId) {
+    return <OtpVerify docId={docId} />;
   }
 
   return <WatchSelector onNext={() => setPage('register')} />;

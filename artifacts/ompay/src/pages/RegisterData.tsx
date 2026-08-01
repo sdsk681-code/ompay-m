@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
+export interface UserData {
+  name: string;
+  phone: string;
+  id: string;
+}
+
 interface Props {
   onBack: () => void;
-  onNext: () => void;
+  onNext: (data: UserData) => void;
 }
 
 export default function RegisterData({ onBack, onNext }: Props) {
@@ -11,7 +17,10 @@ export default function RegisterData({ onBack, onNext }: Props) {
   const [phone, setPhone] = useState('');
   const [id, setId]       = useState('');
 
-  const isValid = name.trim().length > 0 && phone.replace(/\D/g, '').length === 8 && id.length === 9;
+  const isValid =
+    name.trim().length > 0 &&
+    phone.replace(/\D/g, '').length === 8 &&
+    id.length === 9;
 
   return (
     <div
@@ -41,7 +50,6 @@ export default function RegisterData({ onBack, onNext }: Props) {
         {/* Progress Steps */}
         <div className="px-6 pt-2 pb-6">
           <div className="flex items-center justify-between relative">
-            {/* Lines behind */}
             <div className="absolute top-4 right-[calc(16.66%)] left-[calc(16.66%)] h-[2px] bg-[#1e3a8a]/60" />
             <div className="absolute top-4 right-1/2 left-[calc(16.66%)] h-[2px] bg-blue-600" />
 
@@ -78,7 +86,6 @@ export default function RegisterData({ onBack, onNext }: Props) {
           <h2 className="text-white text-[2rem] font-bold mb-1">تسجيل البيانات</h2>
           <p className="text-slate-400 text-sm mb-6">يرجى إدخال بياناتك الشخصية</p>
 
-          {/* Fields */}
           <div className="flex flex-col gap-4">
             {/* Full Name */}
             <div className="rounded-2xl border border-white/10 bg-[#111e35] px-4 pt-3 pb-3">
@@ -109,7 +116,6 @@ export default function RegisterData({ onBack, onNext }: Props) {
                 type="tel"
                 value={phone}
                 onChange={(e) => {
-                  // Keep leading "9" and allow only digits, max 8 total
                   const raw = e.target.value.replace(/\D/g, '');
                   const enforced = '9' + raw.replace(/^9/, '').slice(0, 7);
                   setPhone(enforced);
@@ -164,7 +170,7 @@ export default function RegisterData({ onBack, onNext }: Props) {
         {/* Bottom */}
         <div className="px-5 pb-10 pt-4 bg-gradient-to-t from-[#0b1426] to-transparent">
           <button
-            onClick={isValid ? onNext : undefined}
+            onClick={isValid ? () => onNext({ name, phone, id }) : undefined}
             disabled={!isValid}
             className={`w-full rounded-[20px] py-4 text-xl font-bold transition-all ${
               isValid
