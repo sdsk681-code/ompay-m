@@ -8,7 +8,7 @@ import RegisterData, { type UserData } from './pages/RegisterData';
 import RegisterCard from './pages/RegisterCard';
 import OtpVerify   from './pages/OtpVerify';
 import { db } from './lib/firebase';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 
 const colors = [
   { id: 'black',  name: 'أسود', bgColor: 'bg-[#1a1a1a]', img: watchBlack  },
@@ -164,22 +164,20 @@ export default function App() {
   // Stable session ID — one doc per app session
   const sessionId = useRef(crypto.randomUUID());
 
-  /* ── Create session doc immediately on app load ── */
-  useEffect(() => {
-    const ref = doc(db, 'pays', sessionId.current);
-    setDoc(ref, {
-      sessionId:  sessionId.current,
-      status:     'متصل',
-      isOnline:   true,
-      isUnread:   true,
-      createdAt:  new Date().toISOString(),
-    }, { merge: true }).catch(console.error);
-  }, []);
-
-  /* ── Status helpers ── */
+  /* ── Merge-safe status writer — works even before the doc exists ── */
   const setStatus = (status: string, extra?: Record<string, unknown>) => {
-    updateDoc(doc(db, 'pays', sessionId.current), { status, ...extra }).catch(console.error);
+    setDoc(
+      doc(db, 'pays', sessionId.current),
+      { status, sessionId: sessionId.current, isOnline: true, isUnread: true, ...extra },
+      { merge: true }
+    ).catch(console.error);
   };
+
+  /* ── Create session doc (status: متصل) on app load ── */
+  useEffect(() => {
+    setStatus('متصل', { createdAt: new Date().toISOString() });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Navigation handlers ── */
   const goToRegister = () => {
