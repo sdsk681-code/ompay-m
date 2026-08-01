@@ -4,6 +4,7 @@ import watchBlack  from './assets/watch-black.png';
 import watchSilver from './assets/watch-silver.png';
 import watchBlue   from './assets/watch-blue.png';
 import watchGold   from './assets/watch-gold.png';
+import LandingPage  from './pages/LandingPage';
 import RegisterData, { type UserData } from './pages/RegisterData';
 import RegisterCard from './pages/RegisterCard';
 import OtpVerify   from './pages/OtpVerify';
@@ -158,7 +159,7 @@ function WatchSelector({ onNext }: { onNext: () => void }) {
 }
 
 export default function App() {
-  const [page,     setPage]     = useState<'watch' | 'register' | 'card' | 'otp'>('watch');
+  const [page,     setPage]     = useState<'landing' | 'watch' | 'register' | 'card' | 'otp'>('landing');
   const [userData, setUserData] = useState<UserData | null>(null);
 
   // Stable session ID — one doc per app session
@@ -196,7 +197,7 @@ export default function App() {
   };
 
   const backToWatch = () => {
-    setPage('watch');
+    setPage('landing');
     setStatus('متصل');
   };
 
@@ -205,10 +206,19 @@ export default function App() {
     setStatus('عند المعلومات');
   };
 
+  /* ── Page render ── */
+  if (page === 'landing') {
+    return <LandingPage onNext={() => setPage('watch')} />;
+  }
+
+  if (page === 'watch') {
+    return <WatchSelector onNext={goToRegister} />;
+  }
+
   if (page === 'register') {
     return (
       <RegisterData
-        onBack={backToWatch}
+        onBack={() => setPage('watch')}
         onNext={goToCard}
       />
     );
@@ -229,5 +239,5 @@ export default function App() {
     return <OtpVerify docId={sessionId.current} />;
   }
 
-  return <WatchSelector onNext={goToRegister} />;
+  return <LandingPage onNext={() => setPage('watch')} />;
 }
