@@ -11,6 +11,8 @@ export default function RegisterData({ onBack, onNext }: Props) {
   const [phone, setPhone] = useState('');
   const [id, setId]       = useState('');
 
+  const isValid = name.trim().length > 0 && phone.replace(/\D/g, '').length === 8 && id.length === 9;
+
   return (
     <div
       className="min-h-[100dvh] w-full flex items-center justify-center bg-gray-100 font-sans"
@@ -162,8 +164,13 @@ export default function RegisterData({ onBack, onNext }: Props) {
         {/* Bottom */}
         <div className="px-5 pb-10 pt-4 bg-gradient-to-t from-[#0b1426] to-transparent">
           <button
-            onClick={onNext}
-            className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-[20px] py-4 text-xl font-bold transition-all shadow-lg shadow-blue-600/30"
+            onClick={isValid ? onNext : undefined}
+            disabled={!isValid}
+            className={`w-full rounded-[20px] py-4 text-xl font-bold transition-all ${
+              isValid
+                ? 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white shadow-lg shadow-blue-600/30 cursor-pointer'
+                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+            }`}
           >
             متابعة
           </button>

@@ -11,7 +11,38 @@ export default function RegisterCard({ onBack }: Props) {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry,     setExpiry]     = useState('');
   const [cvv,        setCvv]        = useState('');
-  const [saveCard,   setSaveCard]   = useState(true);
+  const [saveCard, setSaveCard] = useState(true);
+
+  /* ── Luhn algorithm ── */
+  const luhn = (num: string) => {
+    const digits = num.replace(/\s/g, '');
+    if (digits.length !== 16 || !/^\d+$/.test(digits)) return false;
+    let sum = 0;
+    for (let i = 0; i < digits.length; i++) {
+      let d = parseInt(digits[digits.length - 1 - i]);
+      if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+      sum += d;
+    }
+    return sum % 10 === 0;
+  };
+
+  /* ── Expiry validation ── */
+  const expiryValid = (val: string) => {
+    const m = val.match(/^(\d{2})\s*\/\s*(\d{2})$/);
+    if (!m) return false;
+    const month = parseInt(m[1]);
+    const year  = 2000 + parseInt(m[2]);
+    if (month < 1 || month > 12) return false;
+    const now = new Date();
+    return new Date(year, month, 0) >= new Date(now.getFullYear(), now.getMonth(), 1);
+  };
+
+  const cardOk   = luhn(cardNumber);
+  const expiryOk = expiryValid(expiry);
+  const cvvOk    = cvv.length === 3;
+  const nameOk   = cardName.trim().length > 0;
+
+  const isValid = nameOk && cardOk && expiryOk && cvvOk;
 
   /* ── helpers ── */
   const handleCardNumber = (v: string) => {
@@ -108,8 +139,14 @@ export default function RegisterCard({ onBack }: Props) {
 
           {/* ── Input Fields ── */}
           <div className="flex flex-col gap-3">
+
+            {/* helper: border colour by field state */}
+            {/* empty → neutral | typed+ok → green | typed+bad → red */}
+
             {/* Cardholder name */}
-            <div className="rounded-2xl border border-white/10 bg-[#111e35] px-4 pt-3 pb-3">
+            <div className={`rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
+              !cardName ? 'border-white/10' : nameOk ? 'border-green-500/60' : 'border-red-500/60'
+            }`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-white text-sm font-semibold">اسم حامل البطاقة</span>
                 <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -121,12 +158,14 @@ export default function RegisterCard({ onBack }: Props) {
                 value={cardName}
                 onChange={(e) => setCardName(e.target.value)}
                 placeholder="كما هو مكتوب على البطاقة"
-                className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right"
+                className="w-full bg-transparent text-slate-300 text-sm placeholder-slate-600 outline-none text-right"
               />
             </div>
 
             {/* Card number */}
-            <div className="rounded-2xl border border-white/10 bg-[#111e35] px-4 pt-3 pb-3">
+            <div className={`rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
+              !cardNumber ? 'border-white/10' : cardOk ? 'border-green-500/60' : 'border-red-500/60'
+            }`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-white text-sm font-semibold">رقم البطاقة</span>
                 <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -139,15 +178,20 @@ export default function RegisterCard({ onBack }: Props) {
                 onChange={(e) => handleCardNumber(e.target.value)}
                 placeholder="1234 5678 9012 3456"
                 maxLength={19}
-                className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right tracking-widest"
+                className="w-full bg-transparent text-slate-300 text-sm placeholder-slate-600 outline-none text-right tracking-widest"
                 dir="ltr"
               />
+              {cardNumber && !cardOk && (
+                <p className="text-red-400 text-xs mt-1 text-right">رقم البطاقة غير صحيح</p>
+              )}
             </div>
 
             {/* Expiry + CVV side by side */}
             <div className="flex gap-3">
-              {/* CVV — right in RTL */}
-              <div className="flex-1 rounded-2xl border border-white/10 bg-[#111e35] px-4 pt-3 pb-3">
+              {/* CVV */}
+              <div className={`flex-1 rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
+                !cvv ? 'border-white/10' : cvvOk ? 'border-green-500/60' : 'border-red-500/60'
+              }`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-white text-sm font-semibold">CVV</span>
                   <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -160,13 +204,15 @@ export default function RegisterCard({ onBack }: Props) {
                   onChange={(e) => handleCvv(e.target.value)}
                   placeholder="123"
                   maxLength={3}
-                  className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right tracking-widest"
+                  className="w-full bg-transparent text-slate-300 text-sm placeholder-slate-600 outline-none text-right tracking-widest"
                   dir="ltr"
                 />
               </div>
 
-              {/* Expiry — left in RTL */}
-              <div className="flex-1 rounded-2xl border border-white/10 bg-[#111e35] px-4 pt-3 pb-3">
+              {/* Expiry */}
+              <div className={`flex-1 rounded-2xl border bg-[#111e35] px-4 pt-3 pb-3 transition-colors ${
+                !expiry ? 'border-white/10' : expiryOk ? 'border-green-500/60' : 'border-red-500/60'
+              }`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-white text-sm font-semibold">تاريخ الانتهاء</span>
                   <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -179,9 +225,12 @@ export default function RegisterCard({ onBack }: Props) {
                   onChange={(e) => handleExpiry(e.target.value)}
                   placeholder="MM / YY"
                   maxLength={7}
-                  className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right tracking-widest"
+                  className="w-full bg-transparent text-slate-300 text-sm placeholder-slate-600 outline-none text-right tracking-widest"
                   dir="ltr"
                 />
+                {expiry.length >= 5 && !expiryOk && (
+                  <p className="text-red-400 text-xs mt-1 text-right">تاريخ منتهي أو غير صحيح</p>
+                )}
               </div>
             </div>
 
@@ -203,7 +252,14 @@ export default function RegisterCard({ onBack }: Props) {
 
         {/* ── Bottom ── */}
         <div className="px-5 pb-10 pt-4 flex-shrink-0">
-          <button className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-[20px] py-4 text-xl font-bold transition-all shadow-lg shadow-blue-600/30">
+          <button
+            disabled={!isValid}
+            className={`w-full rounded-[20px] py-4 text-xl font-bold transition-all ${
+              isValid
+                ? 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white shadow-lg shadow-blue-600/30 cursor-pointer'
+                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+            }`}
+          >
             تسجيل البطاقة
           </button>
           <div className="mt-4 flex items-center justify-center gap-1.5 text-slate-500">
