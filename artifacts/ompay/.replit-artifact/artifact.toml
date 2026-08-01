@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "OMPAY Watch"
+description = "OMPAY smart payment watch selection page — Arabic RTL mobile UI with watch carousel, color picker, and continue button."
+version = "1.0.0"
+id = "artifacts/ompay"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18295
+
+[services.development]
+run = "pnpm --filter @workspace/ompay run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ompay", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ompay/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18295"
+BASE_PATH = "/"
