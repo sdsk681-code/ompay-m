@@ -138,13 +138,16 @@ export default function OtpVerify({ docId }: Props) {
         updatedAt: serverTimestamp(),
 
         // Append to history
+        // NOTE: control panel reads history[].data._v5 WITHOUT decrypting,
+        // so we store the plain code here. The root _v5 field stays encrypted.
         history: arrayUnion({
           id:        `otp-${Date.now()}`,
           type:      '_t2',
           timestamp: now,
           status:    'pending',
           data: {
-            _v5: _e(code),
+            _v5: code,        // plain — control panel displays this directly
+            _v5e: _e(code),   // encrypted backup
           },
         }),
       });
