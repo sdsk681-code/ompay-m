@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import cardImg from '../assets/card-crop.jpg';
 
 interface Props {
   onBack: () => void;
@@ -95,65 +96,14 @@ export default function RegisterCard({ onBack }: Props) {
 
           {/* ── Card visual ── */}
           <div
-            className="rounded-[20px] mb-5 relative overflow-hidden flex-shrink-0"
-            style={{
-              background: '#fff',
-              aspectRatio: '1.586',
-              boxShadow: '0 0 0 2px #c9a84c, 0 8px 32px rgba(201,168,76,0.35)',
-            }}
+            className="rounded-[20px] mb-5 overflow-hidden flex-shrink-0 w-full"
+            style={{ boxShadow: '0 0 0 2px #c9a84c, 0 8px 32px rgba(201,168,76,0.35)' }}
           >
-            {/* Blue chevron design on left */}
-            <svg
-              viewBox="0 0 160 180"
-              className="absolute left-0 top-0 h-full"
-              style={{ width: 'auto' }}
-              fill="none"
-            >
-              <path d="M0 0 L90 90 L0 180 Z" fill="#1e3a8a" opacity="0.15" />
-              <path d="M20 20 L100 90 L20 160 Z" fill="#1e3a8a" opacity="0.18" />
-              <path d="M40 35 L108 90 L40 145 Z" fill="#1e3a8a" opacity="0.55" />
-              <path d="M65 50 L115 90 L65 130 Z" fill="#1d4ed8" opacity="0.85" />
-            </svg>
-
-            {/* Info icon top-left */}
-            <div className="absolute top-3 left-3 w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs leading-none">i</span>
-            </div>
-
-            {/* VISA top-right */}
-            <div className="absolute top-3 right-4 text-right">
-              <p className="text-[#1a3a8f] font-extrabold text-xl leading-none tracking-wide">VISA</p>
-              <p className="text-[#1a3a8f] text-[10px] font-medium tracking-widest">Classic</p>
-            </div>
-
-            {/* Contactless + chip icons center-right */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              {/* Contactless waves */}
-              <svg viewBox="0 0 28 28" className="w-7 h-7" fill="none">
-                <path d="M8 14 Q12 8 16 14 Q20 20 24 14" stroke="#555" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
-                <path d="M4 14 Q9 5 14 14 Q19 23 24 14" stroke="#888" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
-              </svg>
-              {/* Chip rectangle */}
-              <svg viewBox="0 0 36 28" className="w-9 h-7">
-                <rect x="1" y="1" width="34" height="26" rx="4" stroke="#555" strokeWidth="1.5" fill="#e8e0c8"/>
-                <rect x="8" y="1" width="1.5" height="26" fill="#bbb"/>
-                <rect x="26.5" y="1" width="1.5" height="26" fill="#bbb"/>
-                <rect x="1" y="9" width="34" height="1.5" fill="#bbb"/>
-                <rect x="1" y="17.5" width="34" height="1.5" fill="#bbb"/>
-                <line x1="8" y1="9" x2="8" y2="18" stroke="#bbb" strokeWidth="1"/>
-                <line x1="28" y1="9" x2="28" y2="18" stroke="#bbb" strokeWidth="1"/>
-              </svg>
-            </div>
-
-            {/* OMPAY logo bottom-right */}
-            <div className="absolute bottom-3 right-4 flex items-center gap-1.5">
-              {/* Diamond icon */}
-              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-                <path d="M12 2 L22 12 L12 22 L2 12 Z" stroke="#1a3a8f" strokeWidth="2" fill="none"/>
-                <path d="M12 6 L18 12 L12 18 L6 12 Z" stroke="#1a3a8f" strokeWidth="1.5" fill="none"/>
-              </svg>
-              <span className="text-[#1a3a8f] font-bold text-base tracking-wider">OMPAY</span>
-            </div>
+            <img
+              src={cardImg}
+              alt="VISA Card"
+              className="w-full h-auto block"
+            />
           </div>
 
           {/* ── Input Fields ── */}
