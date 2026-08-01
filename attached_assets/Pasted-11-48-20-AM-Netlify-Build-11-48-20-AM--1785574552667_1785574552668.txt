@@ -1,0 +1,71 @@
+11:48:20 AM: Netlify Build                                                 
+11:48:20 AM: ────────────────────────────────────────────────────────────────
+11:48:20 AM: ​
+11:48:20 AM: ❯ Version
+11:48:20 AM:   @netlify/build 36.2.3
+11:48:20 AM: ​
+11:48:20 AM: ❯ Flags
+11:48:20 AM:   accountId: 69f7ebcc015a96bcdcfa250b
+11:48:20 AM:   baseRelDir: true
+11:48:20 AM:   buildId: 6a6db2c23bf01e0008f348a7
+11:48:20 AM:   deployId: 6a6db2c23bf01e0008f348a9
+11:48:20 AM:   packagePath: artifacts/mockup-sandbox
+11:48:20 AM: ​
+11:48:20 AM: ❯ Current directory
+11:48:20 AM:   /opt/build/repo
+11:48:20 AM: ​
+11:48:20 AM: ❯ Config file
+11:48:20 AM:   No config file was defined: using default values.
+11:48:20 AM: ​
+11:48:20 AM: ❯ Context
+11:48:20 AM:   production
+11:48:20 AM: ​
+11:48:20 AM: Build command from Netlify app                                
+11:48:20 AM: ────────────────────────────────────────────────────────────────
+11:48:20 AM: ​
+11:48:20 AM: $ pnpm --filter @workspace/mockup-sandbox... run build
+11:48:21 AM: > @workspace/mockup-sandbox@2.0.0 build /opt/build/repo/artifacts/mockup-sandbox
+11:48:21 AM: > vite build
+11:48:21 AM: vite v7.3.6 building client environment for production...
+11:48:21 AM: transforming...
+11:48:21 AM: ✓ 30 modules transformed.
+11:48:22 AM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+11:48:22 AM: rendering chunks...
+11:48:22 AM: computing gzip size...
+11:48:22 AM: dist/index.html                   4.42 kB │ gzip:  1.23 kB
+11:48:22 AM: dist/assets/index-C4GxwS3y.css   88.37 kB │ gzip: 14.82 kB
+11:48:22 AM: dist/assets/index-CqOx4XgY.js   187.72 kB │ gzip: 59.51 kB
+11:48:22 AM: ✓ built in 806ms
+11:48:22 AM: ​
+11:48:22 AM: (build.command completed in 1.3s)
+11:48:22 AM: ​
+11:48:22 AM: Scanning for secrets in code and build output.                
+11:48:22 AM: ────────────────────────────────────────────────────────────────
+11:48:22 AM: ​
+11:48:22 AM: ​
+11:48:22 AM: ❯ Scanning complete. 201 file(s) scanned. Secrets scanning found 0 instance(s) of secrets and 1 instance(s) of likely secrets in build output or repo code.
+11:48:22 AM: ​
+11:48:22 AM: "AIza***" detected as a likely secret:
+11:48:22 AM:   found value at line 5 in artifacts/ompay/src/lib/firebase.ts
+11:48:22 AM: ​
+11:48:22 AM: To prevent exposing secrets, the build will fail until these likely secret values are not found in build output or repo files.
+11:48:22 AM: ​
+11:48:22 AM: If these are expected, use SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES, or SECRETS_SCAN_SMART_DETECTION_ENABLED to prevent detecting.
+11:48:22 AM: ​
+11:48:22 AM: For more information on secrets scanning, see the Netlify Docs: https://ntl.fyi/configure-secrets-scanning
+11:48:22 AM: ​
+11:48:22 AM: Secrets scanning detected secrets in files during build.      
+11:48:22 AM: ────────────────────────────────────────────────────────────────
+11:48:22 AM: ​
+11:48:22 AM:   Error message
+11:48:22 AM:   Secrets scanning found secrets in build.
+11:48:22 AM: ​
+11:48:22 AM:   Resolved config
+11:48:22 AM:   build:
+11:48:22 AM:     command: pnpm --filter @workspace/mockup-sandbox... run build
+11:48:22 AM:     commandOrigin: ui
+11:48:22 AM:     publish: /opt/build/repo/artifacts/mockup-sandbox/dist
+11:48:22 AM:     publishOrigin: ui
+11:48:22 AM: Build failed due to a user error: Build script returned non-zero exit code: 2
+11:48:22 AM: Failing build: Failed to build site
+11:48:23 AM: Finished processing build request in 19.487s

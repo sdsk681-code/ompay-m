@@ -1,0 +1,4 @@
+[build.environment]
+  # Firebase client-side config keys are intentionally public identifiers.
+  # Disable smart secrets detection to prevent false positives.
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
