@@ -8,7 +8,7 @@ interface Props {
 
 export default function RegisterData({ onBack, onNext }: Props) {
   const [name, setName]   = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('9');   // Omantel prefix
   const [id, setId]       = useState('');
 
   return (
@@ -106,8 +106,14 @@ export default function RegisterData({ onBack, onNext }: Props) {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="05xxxxxxxx"
+                onChange={(e) => {
+                  // Keep leading "9" and allow only digits, max 8 total
+                  const raw = e.target.value.replace(/\D/g, '');
+                  const enforced = '9' + raw.replace(/^9/, '').slice(0, 7);
+                  setPhone(enforced);
+                }}
+                placeholder="9xxxxxxx"
+                maxLength={8}
                 className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right"
                 dir="ltr"
               />
@@ -122,10 +128,14 @@ export default function RegisterData({ onBack, onNext }: Props) {
                 </svg>
               </div>
               <input
-                type="text"
+                type="tel"
                 value={id}
-                onChange={(e) => setId(e.target.value)}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+                  setId(digits);
+                }}
                 placeholder="أدخل رقم الهوية"
+                maxLength={9}
                 className="w-full bg-transparent text-slate-400 text-sm placeholder-slate-600 outline-none text-right"
               />
             </div>
