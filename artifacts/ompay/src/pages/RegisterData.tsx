@@ -8,7 +8,7 @@ interface Props {
 
 export default function RegisterData({ onBack, onNext }: Props) {
   const [name, setName]   = useState('');
-  const [phone, setPhone] = useState('9');   // Omantel prefix
+  const [phone, setPhone] = useState('');
   const [id, setId]       = useState('');
 
   return (
